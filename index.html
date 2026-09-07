@@ -1,96 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script defer src="/_vercel/insights/script.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css"
-    />
-    <title>Vercel HTML Starter</title>
-    <meta
-      name="description"
-      content="High-performance HTML based website template."
-    />
-  </head>
-  <body>
-    <h1>Vercel HTML Starter</h1>
-    <p>
-      This template is a simple, but powerful single
-      <code>index.html</code> file deployed to
-      <a href="https://vercel.com">Vercel</a>. When your site is deployed, all
-      static assets (like HTML, JavaScript, CSS, images, and more) are deployed
-      globally to every
-      <a href="https://vercel.com/docs/concepts/edge-network/overview"
-        >Vercel Edge Network</a
-      >
-      region.
-    </p>
-    <h2>Simple, privacy-friendly analytics</h2>
-    <p>
-      Want to understand your visitor traffic? Vercel Analytics gives you
-      first-party, privacy-friendly traffic analytics for your HTML site. This
-      template is already configured using the following script:
-    </p>
-    <pre><code>&lt;script defer src="/_vercel/insights/script.js"&gt;&lt;/script&gt;</code></pre>
-    <p>
-      Learn more about
-      <a href="https://vercel.com/analytics">Vercel Analytics</a>.
-    </p>
-    <h2>Integrated with git</h2>
-    <p>
-      Deploying updates to your site is as simple as
-      <code>git push</code> thanks to Vercel's advanced
-      <a href="https://vercel.com/docs/concepts/git">Git Integration</a>.
-      Support for GitHub, GitLab, Bitbucket is zero-configuration, and with the
-      flexible Vercel CLI and API, you can integrate with any tool possible.
-    </p>
-    <p>
-      Learn more about
-      <a href="https://vercel.com/docs/concepts/git">Git Integration</a>.
-    </p>
-    <h2>Fast <code>gzip</code> compression</h2>
-    <p>
-      To help ensure the smallest possible file sizes for your static assets,
-      the Vercel Edge Network compresses files by default using
-      <code>gzip</code>. You can also optionally use
-      <code>brotli</code> compressesion if you prefer.
-    </p>
-    <p>
-      Learn more about
-      <a href="https://vercel.com/docs/concepts/edge-network/compression"
-        >compression</a
-      >.
-    </p>
-    <h2>Advanced routing configuration</h2>
-    <p>
-      Vercel gives you a variety of ways to configure the routing of your
-      website. For example, adding redirects, rewrites, or headers to your page.
-      While you can use <code>vercel.json</code> to define these through JSON,
-      you can also express your routing configuration as code using
-      <a href="https://vercel.com/docs/concepts/functions/edge-middleware"
-        >Vercel Edge Middleware</a
-      >.
-    </p>
-    <p>
-      Middleware runs before the
-      <a href="https://vercel.com/docs/concepts/edge-network/caching"
-        >Vercel Edge Network Cache</a
-      >, so you can configure routing exactly as your application needs. For
-      example, this template uses <code>middleware.js</code> defined in the root
-      of the repository to add additional security headers to the site:
-    </p>
-    <pre><code>referrer-policy: origin-when-cross-origin
-strict-transport-security: max-age=31536000; includeSubDomains; preload
-x-content-type-options: nosniff
-x-dns-prefetch-control: on
-x-frame-options: DENY</code></pre>
-    <p>
-      Learn more about
-      <a href="https://vercel.com/docs/concepts/functions/edge-middleware"
-        >Vercel Edge Middleware</a
-      >.
-    </p>
-  </body>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sultan Tap Game</title>
+<style>
+body{background:#0a0a0a;color:#fff;font-family:Arial;text-align:center;padding:20px;}
+.card{background:#1a1a1a;padding:15px;margin:15px 0;border-radius:10px;border:1px solid #333;}
+.btn{padding:12px;background:#00ff88;color:#000;border:none;border-radius:5px;font-weight:bold;cursor:pointer;}
+.btn-full{width:100%;}
+#qrcode{display:flex;justify-content:center;margin:10px 0;background:#fff;padding:10px;border-radius:10px;}
+</style>
+</head>
+<body>
+<h1>💎 Sultan Tap</h1>
+<button class="btn btn-full" onclick="connectWallet()">Connect Wallet</button>
+<p id="walletStatus">Belum connect</p>
+<div class="card">
+<h3>QR Code Deposit</h3>
+<div id="qrcode">Connect wallet dulu</div>
+<p id="walletAddress" style="font-size:12px;word-break:break-all;color:#aaa;"></p>
+<button class="btn btn-full" onclick="copyWallet()">Copy Alamat</button>
+</div>
+<div class="card">
+<h3>Scan QR</h3>
+<div id="reader" style="width:100%;margin:auto;"></div>
+<p>Hasil Scan: <span id="result" style="color:#00FF00"></span></p>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+let userWallet="";
+async function connectWallet(){
+if(typeof window.ethereum!=='undefined'){
+const accounts=await ethereum.request({method:'eth_requestAccounts'});
+document.getElementById("walletStatus").innerText="Connected: "+accounts[0];
+generateQR(accounts[0]);
+}else{alert("Install Metamask dulu!");}}
+function generateQR(address){
+userWallet=address;
+document.getElementById("walletAddress").innerText=address;
+document.getElementById("qrcode").innerHTML="";
+new QRCode(document.getElementById("qrcode"),{text:address,width:200,height:200});}
+function copyWallet(){
+if(userWallet=="")return alert("Connect wallet dulu!");
+navigator.clipboard.writeText(userWallet);
+alert("Alamat disalin!");}
+function onScanSuccess(decodedText){
+document.getElementById("result").innerText=decodedText;}
+let html5QrcodeScanner=new Html5QrcodeScanner("reader",{fps:10,qrbox:250});
+html5QrcodeScanner.render(onScanSuccess);
+</script>
+</body>
 </html>
