@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8" />
-<title>BANK SULTAN v62.40</title>
+<title>BANK SULTAN v62.44</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <script src="https://unpkg.com/web3@1.10.0/dist/web3.min.js"></script>
 <style>
@@ -19,6 +18,7 @@ body{background:#000;color:#fff;padding-bottom:90px;text-align:center}
 .label-saldo{color:#aaa;font-size:14px;margin-bottom:5px}
 .label-multi{color:cyan;font-size:16px;font-weight:bold;margin-bottom:20px}
 .notif{color:#00ff00;font-size:14px;height:25px;margin-top:10px;font-weight:bold}
+.notif-error{color:#ff4444;font-size:12px;margin-top:5px}
 .btn{border:none;border-radius:20px;padding:16px;width:90%;font-size:16px;font-weight:bold;margin:10px auto;display:block;cursor:pointer}
 .btn-biru{background:#1e90ff;color:white}
 .btn-hijau{background:#00c853;color:#fff}
@@ -52,9 +52,10 @@ body{background:#000;color:#fff;padding-bottom:90px;text-align:center}
 <div class="label-saldo">Saldo Game</div>
 <div class="label-multi">Multiplier: x<span id="multiplier">1</span></div>
 <div class="notif" id="notif"></div>
+<div class="notif-error" id="notifError"></div>
 
 <button id="btnConnect" class="btn btn-biru">🔗 CONNECT WALLET</button>
-<div id="wallet" style="color:yellow;font-size:12px;text-align:center;margin:8px 0;display:none"></div>
+<div id="wallet" style="display:none;color:yellow;font-size:12px;margin:8px auto;word-break:break-all;"></div>
 
 <div class="btn-tap" id="tapButton">TAP</div>
 </div>
@@ -117,26 +118,21 @@ const ABI=[{"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"ui
 const bgm=document.getElementById('bgm'),tapSound=document.getElementById('tapSound'),claimSound=document.getElementById('claimSound');bgm.volume=0.4;
 
 function updateWaktu(){let d=new Date();document.getElementById('tanggal').innerText=d.toLocaleDateString('en-US',{weekday:'short',year:'numeric',month:'short',day:'numeric'})+" "+d.toGMTString().split(' ')[4]+" GMT";document.getElementById('waktu').innerText=d.toLocaleTimeString().replace(/:/g,'.')}
-function saveData(){localStorage.setItem('bank_sultan_v62_40',JSON.stringify({sg:saldoGame,sc:saldoClaim,m:multiplier,lr:lastReward}));}
-function loadData(){let data=JSON.parse(localStorage.getItem('bank_sultan_v62_40'));if(data){saldoGame=data.sg||0;saldoClaim=data.sc||0;multiplier=data.m||1;lastReward=data.lr||0;}}
+function saveData(){localStorage.setItem('bank_sultan_v62_44',JSON.stringify({sg:saldoGame,sc:saldoClaim,m:multiplier,lr:lastReward}));}
+function loadData(){let data=JSON.parse(localStorage.getItem('bank_sultan_v62_44'));if(data){saldoGame=data.sg||0;saldoClaim=data.sc||0;multiplier=data.m||1;lastReward=data.lr||0;}}
 function update(){document.getElementById('saldoGame').innerText=Math.floor(saldoGame).toLocaleString();document.getElementById('saldoClaim').innerText=Math.floor(saldoClaim).toLocaleString();document.getElementById('multiplier').innerText=multiplier;}
 function gantiHalaman(id,el){document.querySelectorAll('.halaman').forEach(h=>h.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById(id).classList.add('active');el.classList.add('active');}
 function tap(){auto=!auto;let btn=document.getElementById('tapButton');if(auto){btn.classList.add('active');btn.innerText="STOP";bgm.play().catch(()=>{});interval=setInterval(()=>{if(!isClaiming){saldoGame+=200*multiplier;tapSound.currentTime=0;tapSound.play().catch(()=>{});cekAutoClaim();}saveData();update();},200);}else{btn.classList.remove('active');btn.innerText="TAP";bgm.pause();clearInterval(interval);}}
 
-// AUTO CLAIM ELEGANT
 function cekAutoClaim(){
 if(saldoGame>=100 &&!isClaiming){
 isClaiming=true;
 let claimJumlah=saldoGame;
 let saldoEl=document.getElementById('saldoGameEl');
 let notifEl=document.getElementById('notif');
-
-// 1. Animasi kedip
 saldoEl.classList.add('claiming');
 notifEl.innerText=`💰 CLAIM ${claimJumlah.toLocaleString()} GRD...`;
 claimSound.play().catch(()=>{});
-
-// 2. Delay 1 detik baru pindah
 setTimeout(()=>{
 saldoClaim+=claimJumlah;
 multiplier+=1;
@@ -152,10 +148,61 @@ setTimeout(()=>{notifEl.innerText=""},2500);
 
 function claimReward(){let now=Date.now();if(now-lastReward<86400000){let sisa=86400000-(now-lastReward);let jam=Math.floor(sisa/3600000);let menit=Math.floor((sisa%3600000)/60000);alert("Tunggu "+jam+"j "+menit+"m lagi");return;}saldoGame+=500;lastReward=now;saveData();update();alert("Berhasil Claim 500 GRD!")}
 function updateRewardTimer(){let now=Date.now();if(now-lastReward>=86400000){document.getElementById('rewardTimer').innerText="Reward siap di claim!";document.getElementById('btnReward').className="btn btn-hijau"}else{let sisa=86400000-(now-lastReward);let jam=Math.floor(sisa/3600000);let menit=Math.floor((sisa%3600000)/60000);document.getElementById('rewardTimer').innerText="Tersedia dalam: "+jam+"j "+menit+"m";document.getElementById('btnReward').className="btn btn-abu"}}
-async function connectWallet(){if (typeof window.ethereum!== 'undefined') {web3 = new Web3(window.ethereum);} else if (typeof window.BinanceChain!== 'undefined') {web3 = new Web3(window.BinanceChain);} else {alert("Buka dari Binance Web3 / Trust Wallet");return;}try{const acc = await web3.eth.requestAccounts();walletAddress = acc[0];contract = new web3.eth.Contract(ABI, CA);await web3.eth.request({method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID }]}).catch(()=>{});document.getElementById('wallet').style.display='block';document.getElementById('wallet').innerText="Wallet: "+walletAddress.slice(0,6)+"..."+walletAddress.slice(-4);document.getElementById('inputAlamat').value=walletAddress;alert("✅ Wallet Terhubung!");}catch(e){alert("Gagal: "+e.message)}}
+
+// FIX KHUS BINANCE WEB3 + SARAN BINANCE AI
+let provider = window.BinanceChain || window.ethereum;
+
+async function cekWalletSudahTerhubung(){
+if(!provider) return;
+web3 = new Web3(provider);
+try{
+const acc = await web3.eth.getAccounts();
+if(acc.length > 0){
+walletAddress = acc[0];
+contract = new web3.eth.Contract(ABI, CA);
+document.getElementById('wallet').style.display='block';
+document.getElementById('wallet').innerText="Wallet: "+walletAddress.slice(0,6)+"..."+walletAddress.slice(-4);
+document.getElementById('inputAlamat').value=walletAddress;
+document.getElementById('btnConnect').innerText="✅ TERHUBUNG";
+}
+}catch(e){}
+}
+
+async function connectWallet(){
+document.getElementById('notifError').innerText="";
+if(!provider){ 
+document.getElementById('notifError').innerText="⚠️ Buka dari Binance > Discover > Browser";
+alert("GAGAL: Buka link ini di dalam aplikasi Binance > Tab Discover > Browser");
+return;
+}
+web3 = new Web3(provider);
+try{
+await provider.request({ method: 'eth_requestAccounts' });
+const acc = await web3.eth.getAccounts();
+walletAddress = acc[0];
+contract = new web3.eth.Contract(ABI, CA);
+await provider.request({method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID }]}).catch(()=>{});
+document.getElementById('wallet').style.display='block';
+document.getElementById('wallet').innerText="Wallet: "+walletAddress.slice(0,6)+"..."+walletAddress.slice(-4);
+document.getElementById('inputAlamat').value=walletAddress;
+document.getElementById('btnConnect').innerText="✅ TERHUBUNG";
+alert("✅ Wallet Binance Terhubung!");
+}catch(e){alert("Gagal: "+e.message)}
+}
+
+// Auto reload kalau ganti chain - saran Binance AI
+if(provider){
+provider.on("chainChanged", () => {
+window.location.reload();
+});
+provider.on("accountsChanged", () => {
+window.location.reload();
+});
+}
+
 async function withdrawBeneran(){if(!walletAddress)return alert("Connect wallet dulu!");let jumlah=parseInt(document.getElementById('inputJumlah').value);let alamat=document.getElementById('inputAlamat').value;if(isNaN(jumlah)||jumlah<100)return alert("Minimal 100 GRD");if(jumlah>saldoClaim)return alert("Saldo tidak cukup");try{let amount=BigInt(jumlah)*(10n**18n);await contract.methods.transfer(alamat,amount.toString()).send({from:walletAddress});saldoClaim-=jumlah;document.getElementById('inputJumlah').value=saldoClaim;saveData();alert("SUKSES WITHDRAW "+jumlah+" GRD");update();}catch(e){alert("Gagal: "+e.message);}}
 function resetGame(){if(confirm("Reset semua data?")){localStorage.clear();location.reload();}}
-document.addEventListener('DOMContentLoaded',function(){loadData();update();updateWaktu();setInterval(updateWaktu,1000);setInterval(updateRewardTimer,60000);updateRewardTimer();document.getElementById('tapButton').onclick=tap;document.getElementById('btnConnect').onclick=connectWallet;document.getElementById('btnWithdraw').onclick=withdrawBeneran;document.getElementById('btnReward').onclick=claimReward;document.querySelectorAll('.nav-item').forEach(item=>{item.onclick=function(){gantiHalaman(this.dataset.page,this)}});setInterval(saveData,5000);});
+document.addEventListener('DOMContentLoaded',function(){loadData();update();updateWaktu();setInterval(updateWaktu,1000);setInterval(updateRewardTimer,60000);updateRewardTimer();cekWalletSudahTerhubung();document.getElementById('tapButton').onclick=tap;document.getElementById('btnConnect').onclick=connectWallet;document.getElementById('btnWithdraw').onclick=withdrawBeneran;document.getElementById('btnReward').onclick=claimReward;document.querySelectorAll('.nav-item').forEach(item=>{item.onclick=function(){gantiHalaman(this.dataset.page,this)}});setInterval(saveData,5000);});
 </script>
 </body>
 </html>
