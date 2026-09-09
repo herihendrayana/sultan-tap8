@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -158,3 +159,301 @@ document.addEventListener('DOMContentLoaded',function(){loadData();update();upda
 </script>
 </body>
 </html>
+
+Kode HTML BANK SULTAN sudah diterima. Apa yang ingin Anda ubah atau tambahkan—misalnya memperbaiki bug, memperbarui tampilan, mengatur sistem tap/reward, atau memperbaiki koneksi dan withdraw wallet?
+
+
+
+8.0k tokens · 2.7s
+Revisi bagian potongan conek waletnya biar bisa conek ke web3
+
+
+3 steps
+· Read index.html, Edited index.html, Edited index.html
+Bagian koneksi wallet sudah direvisi agar:
+
+Mendukung provider Web3 seperti MetaMask, Trust Wallet, dan Binance Wallet.
+Meminta akses akun dengan eth_requestAccounts.
+Otomatis berpindah ke jaringan BNB Smart Chain.
+Menambahkan jaringan BNB Smart Chain jika belum tersedia.
+Menampilkan alamat wallet yang terhubung.
+Memperbarui alamat saat akun wallet diganti.
+Memuat ulang halaman saat jaringan berubah.
+Mengubah tombol menjadi WALLET TERHUBUNG setelah berhasil.
+Pastikan halaman dibuka melalui browser wallet dan koneksi internet tersedia karena library Web3 masih dimuat dari CDN.
+
+
+
+102k tokens · 44.9s
+
+Bagian withdraw bisa langsung conek mengirim dan ada notip dari walet tentang biaya gas
+
+
+2 steps
+· Edited index.html, Edited index.html
+Bagian withdraw sudah diperbaiki agar:
+
+Jika wallet belum terhubung, tombol withdraw otomatis mencoba menghubungkan wallet.
+Memvalidasi alamat tujuan dan jumlah withdraw.
+Menghitung estimasi gas sebelum transaksi.
+Menampilkan perkiraan biaya gas dalam BNB.
+Memanggil transfer melalui Web3.
+Memunculkan konfirmasi transaksi di wallet, termasuk notifikasi biaya gas dari wallet.
+Menonaktifkan tombol selama transaksi berlangsung agar tidak terjadi transaksi ganda.
+Mengurangi saldo hanya setelah transaksi berhasil.
+Menampilkan tautan transaksi ke BscScan.
+Menangani transaksi yang dibatalkan atau gagal.
+Biaya gas tetap dibayarkan menggunakan BNB dari wallet pengirim. Run it untuk melihat alurnya.
+
+
+
+28k tokens · 13.1s
+
+Minta Copy html yang sudah di revisinya
+
+
+1 step
+· Read index.html
+Versi HTML revisi sudah tersedia di file index.html pada editor. Bagian penting yang sudah diperbarui:
+
+connectWalletWeb3() untuk koneksi wallet Web3.
+Dukungan MetaMask, Trust Wallet, dan Binance Wallet.
+Pergantian otomatis ke BNB Smart Chain.
+Withdraw otomatis menghubungkan wallet jika belum tersambung.
+Estimasi biaya gas dalam BNB.
+Konfirmasi transaksi muncul langsung dari wallet.
+Status transaksi dan tautan BscScan ditampilkan setelah berhasil.
+Untuk menyalin seluruh HTML, buka index.html, pilih semua isi, lalu salin.
+
+
+
+38k tokens · 19.4s
+Sudah di beranda tervisi?
+
+Ya, bagian Beranda sudah terhubung ke fungsi Web3:
+
+Tombol CONNECT WALLET menjalankan connectWalletWeb3().
+Mendukung wallet yang menyediakan window.ethereum atau window.BinanceChain.
+Meminta izin akun wallet.
+Berpindah ke jaringan BNB Smart Chain.
+Menampilkan alamat wallet setelah berhasil terhubung.
+Memperbarui alamat jika akun wallet diganti.
+Bagian withdraw juga menggunakan wallet yang terhubung dari Beranda untuk mengirim transaksi dan menampilkan estimasi biaya gas.
+
+
+
+9.6k tokens · 2.8s
+Berarti tinggal pijit code diatas lalu salin
+
+Ya. Buka file index.html di editor, lalu:
+
+Klik di dalam kode.
+Tekan Ctrl+A (Windows/Linux) atau ⌘+A (Mac).
+Tekan Ctrl+C atau ⌘+C.
+Tempelkan ke tempat yang Anda inginkan.
+Salin seluruh isi index.html, mulai dari <!DOCTYPE html> sampai </html>.
+
+
+
+9.7k tokens · 3.1s
+Apakah bisa tolong Copypaste kesini
+
+Bisa. Karena HTML-nya panjang, berikut bagian revisi yang perlu Anda copy-paste menggantikan fungsi connectWallet() dan withdrawBeneran() pada index.html.
+
+async function connectWallet() {
+  const provider = window.ethereum || window.BinanceChain;
+
+  if (!provider) {
+    alert("Wallet Web3 tidak ditemukan. Buka halaman ini melalui MetaMask, Trust Wallet, atau Binance Wallet.");
+    return false;
+  }
+
+  try {
+    web3 = new Web3(provider);
+
+    const accounts = await provider.request({
+      method: "eth_requestAccounts"
+    });
+
+    if (!accounts || !accounts.length) {
+      throw new Error("Tidak ada akun wallet yang dipilih.");
+    }
+
+    const chainId = await provider.request({
+      method: "eth_chainId"
+    });
+
+    if (chainId.toLowerCase() !== "0x38") {
+      try {
+        await provider.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x38" }]
+        });
+      } catch (error) {
+        if (error.code === 4902) {
+          await provider.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: "0x38",
+              chainName: "BNB Smart Chain",
+              nativeCurrency: {
+                name: "BNB",
+                symbol: "BNB",
+                decimals: 18
+              },
+              rpcUrls: ["https://bsc-dataseed.binance.org/"],
+              blockExplorerUrls: ["https://bscscan.com"]
+            }]
+          });
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    walletAddress = accounts[0];
+    contract = new web3.eth.Contract(ABI, CA);
+
+    document.getElementById("wallet").style.display = "block";
+    document.getElementById("wallet").innerText =
+      "✅ Terhubung: " +
+      walletAddress.slice(0, 6) +
+      "..." +
+      walletAddress.slice(-4);
+
+    document.getElementById("inputAlamat").value = walletAddress;
+    document.getElementById("btnConnect").innerText = "✅ WALLET TERHUBUNG";
+
+    provider.on?.("accountsChanged", function (newAccounts) {
+      if (newAccounts.length) {
+        walletAddress = newAccounts[0];
+        document.getElementById("wallet").innerText =
+          "✅ Terhubung: " +
+          walletAddress.slice(0, 6) +
+          "..." +
+          walletAddress.slice(-4);
+        document.getElementById("inputAlamat").value = walletAddress;
+      } else {
+        walletAddress = "";
+        contract = null;
+        document.getElementById("wallet").style.display = "none";
+        document.getElementById("inputAlamat").value = "";
+      }
+    });
+
+    return true;
+  } catch (error) {
+    alert("Gagal menghubungkan wallet: " + (error.message || error));
+    return false;
+  }
+}
+
+async function withdrawBeneran() {
+  const statusEl = document.getElementById("withdrawStatus");
+  const btn = document.getElementById("btnWithdraw");
+
+  if (!walletAddress || !contract) {
+    statusEl.innerText = "Menghubungkan ke wallet...";
+    const connected = await connectWallet();
+
+    if (!connected) {
+      statusEl.innerText = "Wallet belum terhubung.";
+      return;
+    }
+  }
+
+  const jumlah = parseInt(
+    document.getElementById("inputJumlah").value,
+    10
+  );
+
+  const alamat = document
+    .getElementById("inputAlamat")
+    .value
+    .trim();
+
+  if (isNaN(jumlah) || jumlah < 100) {
+    statusEl.innerText = "Minimal withdraw 100 GRD.";
+    return;
+  }
+
+  if (jumlah > saldoClaim) {
+    statusEl.innerText = "Saldo tidak cukup.";
+    return;
+  }
+
+  if (!web3.utils.isAddress(alamat)) {
+    statusEl.innerText = "Alamat wallet tidak valid.";
+    return;
+  }
+
+  try {
+    btn.disabled = true;
+    statusEl.innerText = "Menghitung biaya gas...";
+
+    const amount = (
+      BigInt(jumlah) * (10n ** 18n)
+    ).toString();
+
+    const transaksi = contract.methods.transfer(
+      alamat,
+      amount
+    );
+
+    const gas = await transaksi.estimateGas({
+      from: walletAddress
+    });
+
+    const gasPrice = await web3.eth.getGasPrice();
+
+    const perkiraanGas = BigInt(gas) * BigInt(gasPrice);
+    const biayaGasBNB = web3.utils.fromWei(
+      perkiraanGas.toString(),
+      "ether"
+    );
+
+    statusEl.innerText =
+      "Perkiraan biaya gas: " +
+      Number(biayaGasBNB).toFixed(8) +
+      " BNB. Silakan konfirmasi di wallet...";
+
+    // Baris ini memunculkan notifikasi konfirmasi dan biaya gas di wallet
+    const receipt = await transaksi.send({
+      from: walletAddress,
+      gas: gas,
+      gasPrice: gasPrice
+    });
+
+    saldoClaim -= jumlah;
+    document.getElementById("inputJumlah").value = saldoClaim;
+
+    saveData();
+    update();
+
+    statusEl.innerHTML =
+      '✅ Withdraw berhasil. <a href="https://bscscan.com/tx/' +
+      receipt.transactionHash +
+      '" target="_blank" rel="noopener">Lihat transaksi</a>';
+  } catch (error) {
+    const pesan = error?.message || String(error);
+    const pesanLower = pesan.toLowerCase();
+
+    if (
+      pesanLower.includes("reject") ||
+      pesanLower.includes("denied") ||
+      pesanLower.includes("user denied")
+    ) {
+      statusEl.innerText = "Transaksi dibatalkan di wallet.";
+    } else {
+      statusEl.innerText = "Withdraw gagal: " + pesan;
+    }
+  } finally {
+    btn.disabled = false;
+  }
+}
+Pastikan bagian HTML withdraw memiliki elemen status ini:
+
+<div id="withdrawStatus"
+     style="color:#aaa;font-size:12px;min-height:18px;margin:8px 0">
+</div>
+Dan koneksi tombol tetap seperti 
