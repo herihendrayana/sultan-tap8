@@ -1,1 +1,105 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sultan Tap Game</title><style>body{background:#0a0a0a;color:#fff;font-family:Arial;text-align:center;padding:20px;margin:0}h1{color:#ffd700}.card{background:#1a1a1a;padding:20px;margin:20px auto;border-radius:15px;max-width:420px;border:1px solid #333}.btn{padding:14px;background:#00ff88;color:#000;border:none;border-radius:10px;font-weight:bold;cursor:pointer;width:100%;margin-top:10px;font-size:16px}.btn-merah{background:#ff4444;color:#fff}#qrcode{margin-top:15px}#scanner{width:100%;border-radius:12px;overflow:hidden;margin-top:10px}#hasilScan{background:#222;padding:10px;border-radius:8px;word-break:break-all;font-size:12px;margin-top:10px}#fileInput{display:none}</style><script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script></head><body><h1>💎 Sultan Tap</h1><div class="card"><h2>💰 Deposit USDT</h2><p>Scan QR atau Copy Alamat di bawah</p><p style="color:#ffaa00;font-size:12px;font-weight:bold;">WAJIB Jaringan: BSC / BEP20</p><div id="qrcode">Loading QR...</div></div><div class="card"><h2>📲 Scan QR Member</h2><p>Scan QR untuk terima deposit dari member</p><div id="scanner" style="display:none;"></div><button class="btn" id="btnKamera" onclick="bukaKamera()">Buka Kamera</button><button class="btn" onclick="document.getElementById('fileInput').click()">Unggah dari Galeri</button><input type="file" id="fileInput" accept="image/*" onchange="scanDariGambar(event)"><button class="btn btn-merah" id="btnStop" onclick="tutupScanner()" style="display:none;">Tutup Scanner</button><p id="hasilScan" style="display:none;"></p></div><script>const DEPOSIT_ADDRESS="0x5215e738a35fa9e7f35b28bcb5e1987390728fd9";document.getElementById("qrcode").innerHTML=`<img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${DEPOSIT_ADDRESS}" style="border-radius:12px;background:#fff;padding:12px;" /><p style="word-break:break-all;font-size:12px;background:#222;padding:10px;border-radius:8px;">${DEPOSIT_ADDRESS}</p>`;let html5QrcodeScanner;function bukaKamera(){document.getElementById("scanner").style.display="block";document.getElementById("btnKamera").style.display="none";document.getElementById("btnStop").style.display="block";html5QrcodeScanner=new Html5Qrcode("scanner");html5QrcodeScanner.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},(decodedText)=>{tampilkanHasil(decodedText);tutupScanner();});}function tutupScanner(){if(html5QrcodeScanner){html5QrcodeScanner.stop();}document.getElementById("scanner").style.display="none";document.getElementById("btnKamera").style.display="block";document.getElementById("btnStop").style.display="none";}function scanDariGambar(event){const file=event.target.files[0];if(!file)return;const html5QrCode=new Html5Qrcode("scanner");html5QrCode.scanFile(file,true).then(decodedText=>{tampilkanHasil(decodedText);}).catch(err=>{alert("QR tidak terbaca. Coba gambar yg lebih jelas");});}function tampilkanHasil(teks){document.getElementById("hasilScan").style.display="block";document.getElementById("hasilScan").innerHTML="✅ Hasil Scan:<br>"+teks;navigator.clipboard.writeText(teks);alert("Alamat berhasil di copy: "+teks);}</script></body></html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<title>BANK SULTAN v62.28</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<script src="https://unpkg.com/web3@1.10.0/dist/web3.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial;-webkit-tap-highlight-color:transparent}
+body{background:#000;color:#fff;padding-bottom:80px}
+.header{text-align:center;padding:15px}.header h1{color:gold;font-size:26px;text-shadow:0 0 15px gold}
+.saldo-box{text-align:center;padding:15px}.saldo{font-size:36px;font-weight:bold}
+.saldo-kecil{font-size:14px;color:#aaa}
+.box{background:#1a1a1a;margin:15px;padding:18px;border-radius:15px}
+.label{color:#aaa;font-size:12px;margin-bottom:8px}
+.btn{border:none;border-radius:15px;padding:14px;width:100%;font-size:15px;font-weight:bold;margin:6px 0;display:block;cursor:pointer}
+.btn-biru{background:#1e90ff;color:white}.btn-abu{background:#333;color:white}
+.btn-hijau{background:#00c853;color:#fff}.btn-kuning{background:#f0b90b;color:#000}
+.btn-tap{width:180px;height:180px;border-radius:50%;border:6px solid gold;margin:20px auto;display:flex;align-items:center;justify-content:center;color:gold;font-size:28px;font-weight:bold;background:#111;cursor:pointer;box-shadow:0 0 30px rgba(255,215,0,0.5)}
+.btn-tap.active{border-color:cyan;color:cyan;box-shadow:0 0 50px cyan}
+.navbar{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid #333;display:flex;justify-content:space-around;padding:8px 0;z-index:999}
+.nav-item{color:#777;font-size:10px;text-align:center;cursor:pointer;flex:1}.nav-item.active{color:gold}
+.halaman{display:none}.halaman.active{display:block}
+.input{width:100%;padding:12px;background:#222;border:1px solid #444;border-radius:10px;color:#fff;margin-top:8px}
+.loading{color:orange;font-size:12px;text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+
+<audio id="bgm" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio>
+<audio id="tapSound"><source src="https://www.soundjay.com/buttons/sounds/button-3.mp3" type="audio/mpeg"></audio>
+
+<!-- BERANDA -->
+<div id="beranda" class="halaman active">
+<div class="header"><h1>💰 BANK SULTAN v62.28</h1></div>
+<div class="saldo-box">
+<div class="saldo"><span id="saldoGame">0</span> GRD</div>
+<div class="saldo-kecil">x<span id="multiplier">1</span> | Auto Claim: ON</div>
+</div>
+<div class="box">
+<div class="label">KONEKSI WALLET</div>
+<button id="btnConnect" class="btn btn-biru">🔗 CONNECT WALLET BSC</button>
+<div id="wallet" style="color:yellow;font-size:12px;text-align:center;margin:8px 0;display:none"></div>
+</div>
+<div class="box">
+<div class="label">MUSIK + TAMBANG</div>
+<button id="btnMusikToggle" class="btn btn-abu">🔇 MUSIK: OFF - KLIK DULU</button>
+</div>
+<div class="btn-tap" id="tapButton">TAP</div>
+</div>
+
+<!-- PERDAGANGAN -->
+<div id="perdagangan" class="halaman">
+<div class="header"><h1>📈 PERDAGANGAN</h1></div>
+<div class="box">
+<div class="label">TAMBAH LIKUIDITAS GRD</div>
+<button onclick="window.open('https://swap.cakebaker.finance/add/BNB/0x4847F2E8dD63ba03b9C4f935BdEd95bEc1bcaCb4')" class="btn btn-biru">1. TAMBAH LP CAKEBAKER</button>
+<button onclick="window.open('https://apeswap.finance/add/BNB/0x4847F2E8dD63ba03b9C4f935BdEd95bEc1bcaCb4')" class="btn btn-kuning">2. TAMBAH LP APESWAP</button>
+<button onclick="window.open('https://app.biswap.org/add/BNB/0x4847F2E8dD63ba03b9C4f935BdEd95bEc1bcaCb4')" class="btn btn-hijau">3. TAMBAH LP BISWAP</button>
+<p style="font-size:10px;color:#aaa;margin-top:5px;text-align:center">Kontrak: 0x4847F2E8dD63ba03b9C4f935BdEd95bEc1bcaCb4</p>
+</div>
+</div>
+
+<!-- DANA -->
+<div id="dana" class="halaman">
+<div class="header"><h1 style="color:gold">💰 DANA TERKUNCI</h1></div>
+<div class="box">
+<div class="label">SALDO DANA</div>
+<div class="saldo"><span id="saldoClaim">0</span> GRD</div>
+<div class="label">JUMLAH WITHDRAW</div>
+<input type="number" id="inputJumlah" class="input" placeholder="Minimal 100 GRD">
+<div class="label">ALAMAT WALLET TUJUAN</div>
+<input type="text" id="inputAlamat" class="input" placeholder="Otomatis dari wallet" readonly>
+<button class="btn btn-hijau" id="btnWithdraw">🏦 WITHDRAW</button>
+<div id="loading" class="loading"></div>
+</div>
+</div>
+
+<div id="profil" class="halaman"><div class="header"><h1>⚙️ PROFIL</h1></div><div class="box"><button class="btn" style="background:#dc2626" onclick="resetGame()">🔄 RESET SEMUA DATA</button></div></div>
+
+<div class="navbar">
+<div class="nav-item active" data-page="beranda">🏠<br>Beranda</div>
+<div class="nav-item" data-page="perdagangan">📈<br>Perdagangan</div>
+<div class="nav-item" data-page="dana">💰<br>Dana</div>
+<div class="nav-item" data-page="profil">⚙️<br>Profil</div>
+</div>
+
+<script>
+let saldoGame=0,saldoClaim=0,auto=false,interval,multiplier=1,musikOn=false;
+let web3,walletAddress="",contract;const CA="0x4847F2E8dD63ba03b9C4f935BdEd95bEc1bcaCb4";const CHAIN_ID="0x38";
+const ABI=[{"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}];
+const bgm=document.getElementById('bgm'),tapSound=document.getElementById('tapSound');bgm.volume=0.4;
+function saveData(){localStorage.setItem('bank_sultan_v62_28',JSON.stringify({sg:saldoGame,sc:saldoClaim,m:multiplier}));}
+function loadData(){let data=JSON.parse(localStorage.getItem('bank_sultan_v62_28'));if(data){saldoGame=data.sg||0;saldoClaim=data.sc||0;multiplier=data.m||1;}}
+function update(){document.getElementById('saldoGame').innerText=Math.floor(saldoGame).toLocaleString();document.getElementById('saldoClaim').innerText=Math.floor(saldoClaim).toLocaleString();document.getElementById('multiplier').innerText=multiplier;}
+function gantiHalaman(id,el){document.querySelectorAll('.halaman').forEach(h=>h.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById(id).classList.add('active');el.classList.add('active');}
+function toggleMusik(){musikOn=!musikOn;document.getElementById('btnMusikToggle').innerText=musikOn?"🔊 MUSIK: ON":"🔇 MUSIK: OFF";if(musikOn){bgm.play().catch(()=>{});}else{bgm.pause();}}
+function tap(){if(!musikOn){musikOn=true;document.getElementById('btnMusikToggle').innerText="🔊 MUSIK: ON";bgm.play().catch(()=>{});}auto=!auto;let btn=document.getElementById('tapButton');if(auto){btn.classList.add('active');btn.innerText="STOP";interval=setInterval(()=>{saldoGame+=200*multiplier;tapSound.currentTime=0;tapSound.play().catch(()=>{});saveData();update();},200);}else{btn.classList.remove('active');btn.innerText="TAP";bgm.pause();clearInterval(interval);}}
+async function connectWallet(){if(typeof window.BinanceChain=='undefined'){alert("Buka dari Binance App > Web3 > Browser");return;}try{web3=new Web3(window.BinanceChain);const acc=await window.BinanceChain.request({method:'eth_requestAccounts'});walletAddress=acc[0];contract=new web3.eth.Contract(ABI,CA);await window.BinanceChain.request({method:'wallet_switchEthereumChain',params:[{chainId:CHAIN_ID}]});document.getElementById('wallet').style.display='block';document.getElementById('wallet').innerText="Wallet: "+walletAddress.slice(0,6)+"...";document.getElementById('inputAlamat').value=walletAddress;alert("Wallet Terhubung!");}catch(e){alert("Gagal: "+e.message)}}
+async function withdrawBeneran(){if(!walletAddress)return alert("Connect wallet dulu!");let jumlah=parseInt(document.getElementById('inputJumlah').value);let alamat=document.getElementById('inputAlamat').value;if(isNaN(jumlah)||jumlah<100)return alert("Minimal 100 GRD");if(jumlah>saldoClaim)return alert("Saldo tidak cukup");document.getElementById('loading').innerText="Mengirim...";try{let amount=BigInt(jumlah)*(10n**18n);await contract.methods.transfer(alamat,amount.toString()).send({from:walletAddress});saldoClaim-=jumlah;saveData();document.getElementById('loading').innerText="";alert("SUKSES WITHDRAW "+jumlah+" GRD");update();}catch(e){document.getElementById('loading').innerText="";alert("Gagal: "+e.message);}}
+function resetGame(){if(confirm("Reset?")){localStorage.clear();location.reload();}}
+document.addEventListener('DOMContentLoaded',function(){loadData();update();document.getElementById('tapButton').onclick=tap;document.getElementById('btnConnect').onclick=connectWallet;document.getElementById('btnMusikToggle').onclick=toggleMusik;document.getElementById('btnWithdraw').onclick=withdrawBeneran;document.querySelectorAll('.nav-item').forEach(item=>{item.onclick=function(){gantiHalaman(this.dataset.page,this)}});setInterval(()=>{if(saldoGame>=100){saldoClaim+=saldoGame;multiplier+=1;saldoGame=0;saveData();update();}},60000);setInterval(saveData,5000);});
+</script>
+</body>
+</html>
