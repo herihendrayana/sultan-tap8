@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8" />
-<title>BANK SULTAN v62.28</title>
+<title>BANK SULTAN v62.29</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <script src="https://unpkg.com/web3@1.10.0/dist/web3.min.js"></script>
 <style>
@@ -32,7 +32,7 @@ body{background:#000;color:#fff;padding-bottom:80px}
 
 <!-- BERANDA -->
 <div id="beranda" class="halaman active">
-<div class="header"><h1>💰 BANK SULTAN v62.28</h1></div>
+<div class="header"><h1>💰 BANK SULTAN v62.29</h1></div>
 <div class="saldo-box">
 <div class="saldo"><span id="saldoGame">0</span> GRD</div>
 <div class="saldo-kecil">x<span id="multiplier">1</span> | Auto Claim: ON</div>
@@ -90,13 +90,53 @@ let saldoGame=0,saldoClaim=0,auto=false,interval,multiplier=1,musikOn=false;
 let web3,walletAddress="",contract;const CA="0x4847F2E8dD63ba03b9C4f935BdEd95bEc1bcaCb4";const CHAIN_ID="0x38";
 const ABI=[{"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}];
 const bgm=document.getElementById('bgm'),tapSound=document.getElementById('tapSound');bgm.volume=0.4;
-function saveData(){localStorage.setItem('bank_sultan_v62_28',JSON.stringify({sg:saldoGame,sc:saldoClaim,m:multiplier}));}
-function loadData(){let data=JSON.parse(localStorage.getItem('bank_sultan_v62_28'));if(data){saldoGame=data.sg||0;saldoClaim=data.sc||0;multiplier=data.m||1;}}
+
+function saveData(){localStorage.setItem('bank_sultan_v62_29',JSON.stringify({sg:saldoGame,sc:saldoClaim,m:multiplier}));}
+function loadData(){let data=JSON.parse(localStorage.getItem('bank_sultan_v62_29'));if(data){saldoGame=data.sg||0;saldoClaim=data.sc||0;multiplier=data.m||1;}}
 function update(){document.getElementById('saldoGame').innerText=Math.floor(saldoGame).toLocaleString();document.getElementById('saldoClaim').innerText=Math.floor(saldoClaim).toLocaleString();document.getElementById('multiplier').innerText=multiplier;}
 function gantiHalaman(id,el){document.querySelectorAll('.halaman').forEach(h=>h.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById(id).classList.add('active');el.classList.add('active');}
 function toggleMusik(){musikOn=!musikOn;document.getElementById('btnMusikToggle').innerText=musikOn?"🔊 MUSIK: ON":"🔇 MUSIK: OFF";if(musikOn){bgm.play().catch(()=>{});}else{bgm.pause();}}
 function tap(){if(!musikOn){musikOn=true;document.getElementById('btnMusikToggle').innerText="🔊 MUSIK: ON";bgm.play().catch(()=>{});}auto=!auto;let btn=document.getElementById('tapButton');if(auto){btn.classList.add('active');btn.innerText="STOP";interval=setInterval(()=>{saldoGame+=200*multiplier;tapSound.currentTime=0;tapSound.play().catch(()=>{});saveData();update();},200);}else{btn.classList.remove('active');btn.innerText="TAP";bgm.pause();clearInterval(interval);}}
-async function connectWallet(){if(typeof window.BinanceChain=='undefined'){alert("Buka dari Binance App > Web3 > Browser");return;}try{web3=new Web3(window.BinanceChain);const acc=await window.BinanceChain.request({method:'eth_requestAccounts'});walletAddress=acc[0];contract=new web3.eth.Contract(ABI,CA);await window.BinanceChain.request({method:'wallet_switchEthereumChain',params:[{chainId:CHAIN_ID}]});document.getElementById('wallet').style.display='block';document.getElementById('wallet').innerText="Wallet: "+walletAddress.slice(0,6)+"...";document.getElementById('inputAlamat').value=walletAddress;alert("Wallet Terhubung!");}catch(e){alert("Gagal: "+e.message)}}
+
+// FIX KONEK BINANCE WEB3 TERBARU
+async function connectWallet(){
+  if (typeof window.ethereum!== 'undefined') {
+    web3 = new Web3(window.ethereum);
+  } else if (typeof window.BinanceChain!== 'undefined') {
+    web3 = new Web3(window.BinanceChain);
+  } else {
+    alert("Install Binance Web3 / Trust Wallet / Metamask dulu");
+    return;
+  }
+
+  try{
+    const acc = await web3.eth.requestAccounts();
+    walletAddress = acc[0];
+    contract = new web3.eth.Contract(ABI, CA);
+
+    try {
+      await web3.eth.request({method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID }]});
+    } catch (switchError) {
+      await web3.eth.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: CHAIN_ID,
+          chainName: 'BSC Mainnet',
+          nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+          rpcUrls: ['https://bsc-dataseed.binance.org/'],
+          blockExplorerUrls: ['https://bscscan.com']
+        }]
+      });
+    }
+
+    document.getElementById('wallet').style.display='block';
+    document.getElementById('wallet').innerText="Wallet: "+walletAddress.slice(0,6)+"..."+walletAddress.slice(-4);
+    document.getElementById('inputAlamat').value=walletAddress;
+    alert("✅ Wallet Terhubung!");
+
+  }catch(e){alert("Gagal: "+e.message)}
+}
+
 async function withdrawBeneran(){if(!walletAddress)return alert("Connect wallet dulu!");let jumlah=parseInt(document.getElementById('inputJumlah').value);let alamat=document.getElementById('inputAlamat').value;if(isNaN(jumlah)||jumlah<100)return alert("Minimal 100 GRD");if(jumlah>saldoClaim)return alert("Saldo tidak cukup");document.getElementById('loading').innerText="Mengirim...";try{let amount=BigInt(jumlah)*(10n**18n);await contract.methods.transfer(alamat,amount.toString()).send({from:walletAddress});saldoClaim-=jumlah;saveData();document.getElementById('loading').innerText="";alert("SUKSES WITHDRAW "+jumlah+" GRD");update();}catch(e){document.getElementById('loading').innerText="";alert("Gagal: "+e.message);}}
 function resetGame(){if(confirm("Reset?")){localStorage.clear();location.reload();}}
 document.addEventListener('DOMContentLoaded',function(){loadData();update();document.getElementById('tapButton').onclick=tap;document.getElementById('btnConnect').onclick=connectWallet;document.getElementById('btnMusikToggle').onclick=toggleMusik;document.getElementById('btnWithdraw').onclick=withdrawBeneran;document.querySelectorAll('.nav-item').forEach(item=>{item.onclick=function(){gantiHalaman(this.dataset.page,this)}});setInterval(()=>{if(saldoGame>=100){saldoClaim+=saldoGame;multiplier+=1;saldoGame=0;saveData();update();}},60000);setInterval(saveData,5000);});
